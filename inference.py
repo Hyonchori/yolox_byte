@@ -56,7 +56,7 @@ def main(args):
     if save_vid:
         save_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load YOLO (person detector), YOLOv5 (fire detector)
+    # Load YOLOx (person detector)
     yolox_exp = get_yolox_exp(yolox_exp, yolox_name)
     yolox_model = yolox_exp.get_model().to(device)
     yolox_model.eval()
