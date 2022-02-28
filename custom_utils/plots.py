@@ -55,7 +55,6 @@ def plot_detection(img, boxes, scores, cls_ids, conf=0.5, class_names=None, hide
                 -1
             )
             cv2.putText(img, text, (x0, y0 + txt_size[1]), font, 0.4, txt_color, thickness=2)
-
     return img
 
 

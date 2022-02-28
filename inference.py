@@ -91,6 +91,7 @@ def main(args):
         yolox_model(torch.zeros(1, 3, *yolo_imgsz).to(device).type_as(next(yolox_model.parameters())))
     for path, im, im0s, vid_cap, s, resize_params in dataset:
         print("\n---")
+        print(im.shape)
         ts = time.time()
         # Image preprocessing (scaling + normalize)
         im = preprocess(im, device, half)
@@ -180,6 +181,8 @@ def parse_args():
     source = "rtsp://datonai:datonai@172.30.1.49:554/stream1"
     source = "/home/daton/Desktop/gs/loitering_gs/aihub_subway_cctv_1.mp4"
     source = "source.txt"
+    source = "/media/daton/SAMSUNG/4. 민간분야(2021 특수환경)/distribution/C032100_001.mp4"
+    #source = "/media/daton/Data/datasets/MOT17/train/MOT17-04-SDP/img1"
     parser.add_argument("--source", type=str, default=source)
     parser.add_argument("--out-dir", type=str, default=f"{FILE.parents[0]}/runs/inference")
     parser.add_argument("--run-name", type=str, default="exp")
@@ -193,7 +196,7 @@ def parse_args():
     parser.add_argument("--hide-conf", action="store_true", default=False)
     parser.add_argument("--hide-id", action="store_true", default=False)
     parser.add_argument("--view", action="store_true", default=False)
-    parser.add_argument("--save-vid", action="store_true", default=False)
+    parser.add_argument("--save-vid", action="store_true", default=True)
 
     # Arguments for YOLOX (person detector)
     yolox_exp = f"{FILE.parents[0]}/YOLOx/exps/example/mot/yolox_l_mix_det.py"

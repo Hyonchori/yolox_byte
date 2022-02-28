@@ -1,4 +1,5 @@
 runs/*
 weights/*
 
-__pychache__/
+__pycache__/
+*.py[cod]
