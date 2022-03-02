@@ -38,14 +38,18 @@ def plot_detection(img, boxes, scores, cls_ids, conf=0.5, class_names=None, hide
         color = colors(cls_id, True)
         cv2.rectangle(img, (x0, y0), (x1, y1), color, 2)
 
-        if not hide_conf:
-            text = '{}:{:.1f}%'.format(class_names[cls_id], score * 100)
+        if cls_id >= len(class_names):
+            cat = cls_id
         else:
-            text = f'{class_names[cls_id]}'
+            cat = class_names[cls_id]
+        if not hide_conf:
+            text = '{}: {:.1f}%'.format(cat, score * 100)
+        else:
+            text = f'{cat}'
         if not hide_id:
-            txt_color = (0, 0, 0) if np.mean(color) > 0.5 else (255, 255, 255)
+            txt_color = (255, 255, 255)
             font = cv2.FONT_HERSHEY_SIMPLEX
-            txt_size = cv2.getTextSize(text, font, 0.4, 2)[0]
+            txt_size = cv2.getTextSize(text, font, 0.8, 2)[0]
             txt_bk_color = [int(c * 0.7) for c in color]
             cv2.rectangle(
                 img,
@@ -54,7 +58,7 @@ def plot_detection(img, boxes, scores, cls_ids, conf=0.5, class_names=None, hide
                 txt_bk_color,
                 -1
             )
-            cv2.putText(img, text, (x0, y0 + txt_size[1]), font, 0.4, txt_color, thickness=2)
+            cv2.putText(img, text, (x0, y0 + int(txt_size[1] * 1.1)), font, 0.8, txt_color, thickness=2)
     return img
 
 

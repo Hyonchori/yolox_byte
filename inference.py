@@ -101,7 +101,7 @@ def main(args):
         yolox_preds = yolox_model(im)
         yolox_preds = postprocess(yolox_preds, yolox_exp.num_classes, yolox_conf_thr, yolox_iou_thr)
         t2 = time.time()
-        print(f"yolox prediction time: {t2 - t1:.4f}")
+        print(f"\tyolox prediction time: {t2 - t1:.4f}")
 
         for i, yolox_pred in enumerate(yolox_preds):
             if webcam:
@@ -131,6 +131,7 @@ def main(args):
                 if not hide_label:
                     if view_mode == 1:
                         if yolox_pred is not None:
+                            print(yolox_pred)
                             bboxes = yolox_pred[:, :4]
                             scores = yolox_pred[:, 4] * yolox_pred[:, 5]
                             clss = yolox_pred[:, 6]
@@ -178,10 +179,10 @@ def parse_args():
 
     # Arguments for loading KISA dataset
     source = "0"
-    source = "rtsp://datonai:datonai@172.30.1.49:554/stream1"
-    source = "/home/daton/Desktop/gs/loitering_gs/aihub_subway_cctv_1.mp4"
-    source = "source.txt"
-    source = "/media/daton/SAMSUNG/4. 민간분야(2021 특수환경)/distribution/C032100_001.mp4"
+    #source = "rtsp://datonai:datonai@172.30.1.49:554/stream1"
+    #source = "/home/daton/Desktop/gs/loitering_gs/aihub_subway_cctv_1.mp4"
+    #source = "source.txt"
+    #source = "/media/daton/SAMSUNG/4. 민간분야(2021 특수환경)/distribution/C032100_001.mp4"
     #source = "/media/daton/Data/datasets/MOT17/train/MOT17-04-SDP/img1"
     parser.add_argument("--source", type=str, default=source)
     parser.add_argument("--out-dir", type=str, default=f"{FILE.parents[0]}/runs/inference")
@@ -190,24 +191,26 @@ def parse_args():
     parser.add_argument("--fuse", default=True, action="store_true")
     parser.add_argument("--device", type=str, default="")
     parser.add_argument("--is-video-frames", action="store_true", default=True)
-    parser.add_argument("--view-mode", type=int, default=2)  # 1: detection, 2: tracking
+    parser.add_argument("--view-mode", type=int, default=1)  # 1: detection, 2: tracking
     parser.add_argument("--view-conf-thr", type=float, default=0.5)
     parser.add_argument("--hide-label", action="store_true", default=False)
     parser.add_argument("--hide-conf", action="store_true", default=False)
     parser.add_argument("--hide-id", action="store_true", default=False)
-    parser.add_argument("--view", action="store_true", default=False)
-    parser.add_argument("--save-vid", action="store_true", default=True)
+    parser.add_argument("--view", action="store_true", default=True)
+    parser.add_argument("--save-vid", action="store_true", default=False)
 
     # Arguments for YOLOX (person detector)
     yolox_exp = f"{FILE.parents[0]}/YOLOx/exps/example/mot/yolox_l_mix_det.py"
+    #yolox_exp = f"{FILE.parents[0]}/YOLOx/exps/default/yolox_l.py"
     yolox_name = None
     yolox_weights = f"{FILE.parents[0]}/weights/yolox/bytetrack_l_mot17.pth.tar"
+    #yolox_weights = f"{FILE.parents[0]}/weights/yolox/yolox_l.pth"
     parser.add_argument("--yolox-exp", type=str, default=yolox_exp)
     parser.add_argument("--yolox-name", type=str, default=yolox_name)
     parser.add_argument("--yolox-weights", type=str, default=yolox_weights)
-    parser.add_argument("--yolo-imgsz", type=int, default=[1280])
+    parser.add_argument("--yolo-imgsz", type=int, default=[640, 640])
     parser.add_argument("--yolox-conf-thr", type=float, default=0.01)
-    parser.add_argument("--yolox-iou-thr", type=float, default=0.7)
+    parser.add_argument("--yolox-iou-thr", type=float, default=0.45)
 
     # Arguments for Byte (person tracker)
     parser.add_argument("--track-thresh", type=float, default=0.5)

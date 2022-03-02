@@ -75,16 +75,18 @@ def model_info(model, img_size=640, model_name=None, verbose=False):
 
 
 def preprocess(img: np.ndarray, device: torch.device, half: bool=False,
-               mean: [int]=[0.485, 0.456, 0.406], std: [int]=[0.229, 0.224, 0.225]):
+               mean: [float]=[0.485, 0.456, 0.406], std: [float]=[0.229, 0.224, 0.225], scaling=True, normalize=True):
     img = torch.from_numpy(img).to(device)
     img = img.half() if half else img.float()
     # Scaling pixel value 0 ~ 255 to 0 ~ 1
-    img /= 255.
+    if scaling:
+        img /= 255.
     if len(img.shape) == 3:
         img = img.unsqueeze(0)
     # Normalize pixel value
-    img -= torch.Tensor(mean).reshape(3, 1, 1).to(device)
-    img /= torch.Tensor(std).reshape(3, 1, 1).to(device)
+    if normalize:
+        img -= torch.Tensor(mean).reshape(3, 1, 1).to(device)
+        img /= torch.Tensor(std).reshape(3, 1, 1).to(device)
     return img
 
 
