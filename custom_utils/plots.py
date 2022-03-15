@@ -23,60 +23,44 @@ class Colors:
 colors = Colors()  # create instance for 'from utils.plots import colors'
 
 
-def plot_detection(img, boxes, scores, cls_ids, conf=0.5, class_names=None, hide_conf=False, hide_id=False):
-    for i in range(len(boxes)):
-        box = boxes[i]
-        cls_id = int(cls_ids[i])
-        score = scores[i]
+def plot_detection(img, bboxes, scores, cls_ids, conf=0.5, class_names=None, hide_conf=False, hide_id=False,
+                   line_thickness=2, font_size=1, font_thickness=1):
+    for bbox, score, cls_id in zip(bboxes, scores, cls_ids):
         if score < conf:
             continue
-        x0 = int(box[0])
-        y0 = int(box[1])
-        x1 = int(box[2])
-        y1 = int(box[3])
-
+        bbox_int = list(map(int, bbox))
+        cls_id = int(cls_id)
         color = colors(cls_id, True)
-        cv2.rectangle(img, (x0, y0), (x1, y1), color, 2)
-
+        cv2.rectangle(img, bbox_int[:2], bbox_int[2:], color, line_thickness)
         if cls_id >= len(class_names):
             cat = cls_id
         else:
             cat = class_names[cls_id]
         if not hide_conf:
-            text = '{}: {:.1f}%'.format(cat, score * 100)
+            text = f'{cat}: {score * 100:.1f}%'
         else:
             text = f'{cat}'
         if not hide_id:
-            txt_color = (255, 255, 255)
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            txt_size = cv2.getTextSize(text, font, 0.8, 2)[0]
-            txt_bk_color = [int(c * 0.7) for c in color]
-            cv2.rectangle(
-                img,
-                (x0, y0 + 1),
-                (x0 + txt_size[0] + 1, y0 + int(1.5*txt_size[1])),
-                txt_bk_color,
-                -1
-            )
-            cv2.putText(img, text, (x0, y0 + int(txt_size[1] * 1.1)), font, 0.8, txt_color, thickness=2)
+            plot_label(img, bbox_int, text, color, font_size, font_thickness)
     return img
 
 
-def plot_tracking(im, tlwhs, obj_ids, ids2=None, hide_id=False):
-    im = np.ascontiguousarray(np.copy(im))
-    text_scale = 2
-    text_thickness = 2
-    line_thickness = 3
-    for i, tlwh in enumerate(tlwhs):
-        x1, y1, w, h = tlwh
-        intbox = tuple(map(int, (x1, y1, x1 + w, y1 + h)))
-        obj_id = int(obj_ids[i])
-        color = colors(abs(obj_id), True)
-        cv2.rectangle(im, intbox[0:2], intbox[2:4], color=color, thickness=line_thickness)
-        id_text = '{}'.format(int(obj_id))
+def plot_tracking(img, xywhs, obj_ids, hide_id=False, line_thickness=2, font_size=1, font_thickness=1):
+    for xywh, obj_id in zip(xywhs, obj_ids):
+        bbox_int = list(map(int, (xywh[0], xywh[1], xywh[0] + xywh[2], xywh[1] + xywh[3])))
+        obj_id = int(obj_id)
+        color = colors(obj_id, True)
+        cv2.rectangle(img, bbox_int[:2], bbox_int[2:], color, line_thickness)
+        text = f"{obj_id}"
         if not hide_id:
-            if ids2 is not None:
-                id_text = id_text + ', {}'.format(int(ids2[i]))
-            cv2.putText(im, id_text, (intbox[0], intbox[1]), cv2.FONT_HERSHEY_PLAIN, text_scale, (0, 0, 255),
-                        thickness=text_thickness)
-    return im
+            plot_label(img, bbox_int, text, color, font_size, font_thickness)
+    return img
+
+
+def plot_label(img, xyxy, label, color, font_size=1., font_thickness=1):
+    txt_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_size, font_thickness)[0]
+    txt_bk_color = [int(c * 0.7) for c in color]
+    cv2.rectangle(img, xyxy[:2], (xyxy[0] + txt_size[0] + 1, xyxy[1] + int(txt_size[1] * 1.5)),
+                  txt_bk_color, -1)
+    cv2.putText(img, label, (xyxy[0], xyxy[1] + int(txt_size[1] * 1.2)),
+                cv2.FONT_HERSHEY_SIMPLEX, font_size, (255, 255, 255), font_thickness)

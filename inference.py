@@ -18,7 +18,8 @@ FILE = Path(__file__).absolute()
 
 if os.path.join(FILE.parents[0], "custom_utils") not in sys.path:
     sys.path.append(os.path.join(FILE.parents[0], "custom_utils"))
-from custom_utils.general import select_device, increment_path, model_info, preprocess, scale_coords, filtering_targets
+from custom_utils.general import (select_device, increment_path, model_info, preprocess, scale_coords,
+                                  filtering_targets, xyxy2cpwhn)
 from custom_utils.datasets import IMG_FORMATS, VID_FORMATS, LoadImages, LoadStreams
 from custom_utils.plots import plot_detection, plot_tracking
 
@@ -30,6 +31,7 @@ def main(args):
     out_dir = args.out_dir
     run_name = args.run_name
     save_vid = args.save_vid
+    save_label = args.save_label
     half = args.half
     fuse = args.fuse
     device = args.device
@@ -55,6 +57,9 @@ def main(args):
     save_dir = increment_path(Path(out_dir) / run_name, exist_ok=False)
     if save_vid:
         save_dir.mkdir(parents=True, exist_ok=True)
+        if save_label:
+            label_save_dir = os.path.join(save_dir, "labels")
+            os.mkdir(label_save_dir)
 
     # Load YOLOx (person detector)
     yolox_exp = get_yolox_exp(yolox_exp, yolox_name)
@@ -114,6 +119,18 @@ def main(args):
 
             if yolox_pred is not None:
                 yolox_pred[:, :4] = scale_coords(im.shape[2:], yolox_pred[:, :4], im0.shape[:2])
+                if save_label:
+                    txt = ""
+                    pred_for_label = xyxy2cpwhn(yolox_pred, w=imv.shape[1], h=imv.shape[0])
+                    for pred in pred_for_label:
+                        conf = pred[4] * pred[5]
+                        if conf >= view_conf_thr:
+                            txt += f"{pred[-1]} {pred[0]:.6f} {pred[1]:.6f} {pred[2]:.6f} {pred[3]:.6f}\n"
+                    if txt != "":
+                        label_save_name = ".".join(p.name.split(".")[:-1]) + ".txt"
+                        label_save_path = os.path.join(label_save_dir, label_save_name)
+                        with open(label_save_path, "w") as f:
+                            f.write(txt)
 
                 # BYTE prediction (tracking)
                 t1 = time.time()
@@ -121,17 +138,11 @@ def main(args):
                 online_tlwhs, online_ids = filtering_targets(online_targets, min_box_area)
                 t2 = time.time()
                 print(f"\ttracker prediction time: {t2 - t1:.4f}")
-            else:
-                online_tlwhs = []
-                online_ids = []
 
-            # Visualize prediction results
-            if view:
                 t1 = time.time()
                 if not hide_label:
                     if view_mode == 1:
                         if yolox_pred is not None:
-                            print(yolox_pred)
                             bboxes = yolox_pred[:, :4]
                             scores = yolox_pred[:, 4] * yolox_pred[:, 5]
                             clss = yolox_pred[:, 6]
@@ -140,11 +151,17 @@ def main(args):
                     elif view_mode == 2:
                         imv = plot_tracking(imv, online_tlwhs, online_ids,
                                             hide_id=hide_id)
+                t2 = time.time()
+                print(f"\tvisualization time: {t2 - t1:.4f}")
+            else:
+                online_tlwhs = []
+                online_ids = []
+
+            # Visualize prediction results
+            if view:
                 img_name = f"{Path(save_path).name}_{i}"
                 cv2.imshow(img_name, imv)
                 cv2.waitKey(1)
-                t2 = time.time()
-                print(f"\tvisualization time: {t2 - t1:.4f}")
 
             # Save results
             if save_vid:
@@ -179,25 +196,33 @@ def parse_args():
 
     # Arguments for loading KISA dataset
     source = "0"
-    #source = "rtsp://datonai:datonai@172.30.1.49:554/stream1"
+    source = "rtsp://datonai:datonai@172.30.1.49:554/stream1"
+    source = "rtsp://datonai:datonai@172.30.1.50:554/stream1"
+    #source = "rtsp://datonai:datonai@172.30.1.24:554/stream1"
+    source = "rtsp://datonai:datonai@172.30.1.1:554/stream1"
+    source = "https://www.youtube.com/watch?v=UoYchhSqPmY"
+    source = "https://www.youtube.com/watch?v=uMnGzVPUEB4&t=2919s"
+    #source = "https://www.youtube.com/watch?v=GKR97D4zqm8"
     #source = "/home/daton/Desktop/gs/loitering_gs/aihub_subway_cctv_1.mp4"
     #source = "source.txt"
     #source = "/media/daton/SAMSUNG/4. 민간분야(2021 특수환경)/distribution/C032100_001.mp4"
     #source = "/media/daton/Data/datasets/MOT17/train/MOT17-04-SDP/img1"
+    source = "/media/daton/Data/datasets/unlabeled_images"
     parser.add_argument("--source", type=str, default=source)
     parser.add_argument("--out-dir", type=str, default=f"{FILE.parents[0]}/runs/inference")
     parser.add_argument("--run-name", type=str, default="exp")
     parser.add_argument("--half", default=True, action="store_true")
     parser.add_argument("--fuse", default=True, action="store_true")
     parser.add_argument("--device", type=str, default="")
-    parser.add_argument("--is-video-frames", action="store_true", default=True)
+    parser.add_argument("--is-video-frames", action="store_true", default=False)
     parser.add_argument("--view-mode", type=int, default=1)  # 1: detection, 2: tracking
     parser.add_argument("--view-conf-thr", type=float, default=0.5)
     parser.add_argument("--hide-label", action="store_true", default=False)
     parser.add_argument("--hide-conf", action="store_true", default=False)
     parser.add_argument("--hide-id", action="store_true", default=False)
-    parser.add_argument("--view", action="store_true", default=True)
-    parser.add_argument("--save-vid", action="store_true", default=False)
+    parser.add_argument("--view", action="store_true", default=False)
+    parser.add_argument("--save-vid", action="store_true", default=True)
+    parser.add_argument("--save-label", action="store_true", default=True)
 
     # Arguments for YOLOX (person detector)
     yolox_exp = f"{FILE.parents[0]}/YOLOx/exps/example/mot/yolox_l_mix_det.py"
@@ -208,7 +233,7 @@ def parse_args():
     parser.add_argument("--yolox-exp", type=str, default=yolox_exp)
     parser.add_argument("--yolox-name", type=str, default=yolox_name)
     parser.add_argument("--yolox-weights", type=str, default=yolox_weights)
-    parser.add_argument("--yolo-imgsz", type=int, default=[640, 640])
+    parser.add_argument("--yolo-imgsz", type=int, default=[1280])
     parser.add_argument("--yolox-conf-thr", type=float, default=0.01)
     parser.add_argument("--yolox-iou-thr", type=float, default=0.45)
 
