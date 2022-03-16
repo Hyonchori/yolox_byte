@@ -60,7 +60,7 @@ def plot_tracking(img, xywhs, obj_ids, hide_id=False, line_thickness=2, font_siz
 def plot_label(img, xyxy, label, color, font_size=1., font_thickness=1):
     txt_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_size, font_thickness)[0]
     txt_bk_color = [int(c * 0.7) for c in color]
-    cv2.rectangle(img, xyxy[:2], (xyxy[0] + txt_size[0] + 1, xyxy[1] + int(txt_size[1] * 1.5)),
+    cv2.rectangle(img, (xyxy[0], xyxy[1] - int(txt_size[1] * 1.5)), (xyxy[0] + txt_size[0] + 1, xyxy[1]),
                   txt_bk_color, -1)
-    cv2.putText(img, label, (xyxy[0], xyxy[1] + int(txt_size[1] * 1.2)),
+    cv2.putText(img, label, (xyxy[0], xyxy[1] - int(txt_size[1] * 0.3)),
                 cv2.FONT_HERSHEY_SIMPLEX, font_size, (255, 255, 255), font_thickness)

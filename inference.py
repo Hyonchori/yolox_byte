@@ -216,7 +216,7 @@ def parse_args():
     parser.add_argument("--device", type=str, default="")
     parser.add_argument("--is-video-frames", action="store_true", default=False)
     parser.add_argument("--view-mode", type=int, default=1)  # 1: detection, 2: tracking
-    parser.add_argument("--view-conf-thr", type=float, default=0.5)
+    parser.add_argument("--view-conf-thr", type=float, default=0.3)
     parser.add_argument("--hide-label", action="store_true", default=False)
     parser.add_argument("--hide-conf", action="store_true", default=False)
     parser.add_argument("--hide-id", action="store_true", default=False)
@@ -235,7 +235,7 @@ def parse_args():
     parser.add_argument("--yolox-weights", type=str, default=yolox_weights)
     parser.add_argument("--yolo-imgsz", type=int, default=[1280])
     parser.add_argument("--yolox-conf-thr", type=float, default=0.01)
-    parser.add_argument("--yolox-iou-thr", type=float, default=0.45)
+    parser.add_argument("--yolox-iou-thr", type=float, default=0.7)
 
     # Arguments for Byte (person tracker)
     parser.add_argument("--track-thresh", type=float, default=0.5)
